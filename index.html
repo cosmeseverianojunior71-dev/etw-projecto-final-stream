@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0b">
+<meta name="referrer" content="no-referrer">
 <title>ETW — Filmes, Séries e Doramas</title>
 
 <style>
@@ -14,12 +15,10 @@
   --txt-2:#b3b3b3;
   --txt-3:#7c7c7c;
   --red:#e50914;
-  --red-2:#ff1f2b;
   --hdr:64px;
   --radius:10px;
   --radius-lg:16px;
   --shadow:0 18px 48px rgba(0,0,0,.62);
-  --ease:cubic-bezier(.22,.61,.36,1);
   --maxw:1600px;
 }
 
@@ -137,7 +136,7 @@ select.sel{background:#1e1e1e;border:1px solid var(--line);color:#fff;padding:8p
       <div class="player-ph">
         <div>
           <div class="big-play" id="phPlay">&#9654;</div>
-          <h3>Clique no Play para assistir</h3>
+          <h3>Clique no Play para carregar o vídeo</h3>
         </div>
       </div>
     </div>
@@ -151,8 +150,8 @@ select.sel{background:#1e1e1e;border:1px solid var(--line);color:#fff;padding:8p
         <select class="sel" id="seasonSel" hidden></select>
         <select class="sel" id="serverSel">
           <option value="warez">Servidor Warez (PT-BR)</option>
-          <option value="autoembed">Servidor Autoembed (Multi)</option>
-          <option value="vidsrc">Servidor Vidsrc (Inglês)</option>
+          <option value="autoembed">Servidor Autoembed (Multi/Dublado)</option>
+          <option value="vidsrc">Servidor VidSrc CC</option>
         </select>
       </div>
     </div>
@@ -379,38 +378,47 @@ async function loadEpisodes(id, season) {
   } catch(e) {}
 }
 
-function playMedia() {
+async function playMedia() {
   if (!state.current) return;
   const c = state.current;
   const server = $('#serverSel').value;
+  const wrap = $('#playerWrap');
+  
+  wrap.innerHTML = '<div class="player-ph"><h3>Carregando player...</h3></div>';
+
+  let imdbId = null;
+  
+  // Busca o IMDB ID para garantir compatibilidade com provedores nacionais
+  try {
+    const externalIds = await tmdb(`/${c.type}/${c.id}/external_ids`);
+    imdbId = externalIds.imdb_id;
+  } catch(e) {}
+
   let url = '';
 
-  // Constrói as URLs de acordo com o servidor selecionado
   if (server === 'warez') {
-    // Servidor focado em conteúdo PT-BR
-    if (c.type === 'movie') {
-      url = `https://embed.warezcdn.net/filme/${c.id}`;
-    } else {
-      url = `https://embed.warezcdn.net/serie/${c.id}/${state.s}/${state.e}`;
-    }
+    const targetId = imdbId || c.id;
+    url = c.type === 'movie' 
+      ? `https://embed.warezcdn.net/filme/${targetId}` 
+      : `https://embed.warezcdn.net/serie/${targetId}/${state.s}/${state.e}`;
   } else if (server === 'autoembed') {
-    // Servidor internacional com opção de idioma PT-BR
-    if (c.type === 'movie') {
-      url = `https://player.autoembed.cc/embed/movie/${c.id}?lang=pt-BR`;
-    } else {
-      url = `https://player.autoembed.cc/embed/tv/${c.id}/${state.s}/${state.e}?lang=pt-BR`;
-    }
+    url = c.type === 'movie' 
+      ? `https://player.autoembed.cc/embed/movie/${c.id}?lang=pt-BR` 
+      : `https://player.autoembed.cc/embed/tv/${c.id}/${state.s}/${state.e}?lang=pt-BR`;
   } else if (server === 'vidsrc') {
-    // Servidor Vidsrc padrão
-    if (c.type === 'movie') {
-      url = `https://vidsrc.to/embed/movie/${c.id}`;
-    } else {
-      url = `https://vidsrc.to/embed/tv/${c.id}/${state.s}/${state.e}`;
-    }
+    url = c.type === 'movie' 
+      ? `https://vidsrc.cc/v2/embed/movie/${c.id}` 
+      : `https://vidsrc.cc/v2/embed/tv/${c.id}/${state.s}/${state.e}`;
   }
 
-  // Renderiza o player com as permissões corretas ativadas
-  $('#playerWrap').innerHTML = `<iframe src="${url}" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>`;
+  wrap.innerHTML = `
+    <iframe 
+      src="${url}" 
+      allowfullscreen 
+      referrerpolicy="no-referrer"
+      allow="autoplay; encrypted-media; picture-in-picture">
+    </iframe>`;
+
   $('#pTitle').textContent = c.preview.title || c.preview.name;
   $('#pSub').textContent = c.type === 'tv' ? `Temporada ${state.s} • Episódio ${state.e}` : 'Filme';
 }
