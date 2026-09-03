@@ -476,7 +476,7 @@ footer{border-top:1px solid var(--line);background:#0c0c0c;padding:26px 32px;mar
     <h3>Configurações</h3>
     <div class="field">
       <label for="inKey">Chave API do TMDB</label>
-      <input type="password" id="inKey" placeholder="Cole sua chave v3 do TMDB">
+      <input type="password" id="inKey" placeholder="a2519cba9ac3eff92bd3b1e7e079e8bd">
     </div>
     <button class="btn btn-red" id="saveSet">Salvar</button>
   </div>
@@ -493,7 +493,7 @@ const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const el = (tag, cls, html) => { const n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const DEMO_KEY = '3fd2be6f0c70a2a598f084ddfb75487c';
+const DEMO_KEY = 'a2519cba9ac3eff92bd3b1e7e079e8bd';
 const API = 'https://api.themoviedb.org/3';
 const IMG = 'https://image.tmdb.org/t/p/';
 
